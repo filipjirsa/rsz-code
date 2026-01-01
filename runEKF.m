@@ -17,6 +17,7 @@ start_lat = data.GPS.Pos(1,1);
 start_lon = data.GPS.Pos(1,2);
 start_alt = data.GPS.Pos(1,3);
 
+Rmultiplier = 250;
 %% --- INICIALIZÁCIA STAVU ---
 x = zeros(16,1);
 x(7) = 1; % quaternion
@@ -64,7 +65,7 @@ for k = 1:N
 
     % --- 2. KOREKCIA (GPS) ---
     if cfg.update.gps
-        R = diag([var_lat*scale_x^2, var_lon*scale_y^2, var_alt, 0.2, 0.2, 0.2]);
+        R = diag([var_lat*scale_x^2, var_lon*scale_y^2, var_alt, 0.2, 0.2, 0.2]*Rmultiplier);
         [Z, H] = gpsMeasurement(data, k, start_lat, start_lon, start_alt);
         [x, P, nis_gps] = ekfUpdate(x, P, Z, H, R);
         log.nis.gps(k) = nis_gps;
@@ -79,7 +80,7 @@ for k = 1:N
         H = zeros(1,16);
         H(3) = 1;   % p_z
         
-        R = data.(baroName).Var_Alt;
+        R = data.(baroName).Var_Alt*Rmultiplier;
 
         [x, P, nis_baro] = ekfUpdate(x, P, Z, H, R);
         log.nis.baro(k) = nis_baro;
@@ -114,7 +115,7 @@ for k = 1:N
             H(6+i) = d;  % indexy 7:10
         end
         
-        R = data.(magName).Var_Field(1);
+        R = data.(magName).Var_Field(1)*Rmultiplier;
         
         [x, P, nis_mag] = ekfUpdate(x, P, nu, H, R);
         log.nis.mag(k) = nis_mag;

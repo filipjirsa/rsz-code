@@ -18,7 +18,7 @@ save("ekfResults.mat","results")
 % (pro 1. EKF)
 % --- GPS prepočet do lokálneho rámca (rovnaký ako v EKF) ---
 start_lat = data.GPS.Pos(1,1);
-start_lon = datsa.GPS.Pos(1,2);
+start_lon = data.GPS.Pos(1,2);
 start_alt = data.GPS.Pos(1,3);
 
 gps_x = (data.GPS.Pos(:,1) - start_lat) * 111132;
@@ -74,3 +74,17 @@ rmse_z = sqrt(mean(err(:,3).^2));
 
 fprintf('RMSE [X Y Z] = %.2f %.2f %.2f m\n', rmse_x, rmse_y, rmse_z);
 fprintf('RMSE celkova = %.2f m\n', rmse_total);
+
+%% Detekce chybného senzoru
+load('ekfResults.mat','results');
+cfgs = createConfigs();
+out = detectFaultySensor(results, cfgs);
+
+disp("Faulty EKFs:");
+disp({results(out.F).name}')
+
+disp("Suspicion P per sensor:");
+disp(table(out.sensorList', out.P', 'VariableNames', {'Sensor','P'}))
+
+disp("Most suspicious sensor:");
+disp(out.winner)
